@@ -32,17 +32,24 @@ const AdminDashboard = () => {
   const handleSubmit = () => {
     const url = editId ? `/api/tour-packages/${editId}` : "/api/tour-packages";
     const method = editId ? "PUT" : "POST";
-
+  
+    const payload = {
+      ...formData,
+      availableDates: Array.isArray(formData.availableDates)
+        ? formData.availableDates
+        : formData.availableDates.split(",").map((date) => date.trim()),
+    };
+  
     fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
+      body: JSON.stringify(payload),
     })
       .then((res) => res.json())
       .then((data) => {
         if (editId) {
           setPackages((prev) =>
-            prev.map((pkg) => (pkg.id === editId ? { ...pkg, ...data } : pkg))
+            prev.map((pkg) => (pkg._id === editId ? { ...pkg, ...data } : pkg))
           );
         } else {
           setPackages((prev) => [...prev, data]);
@@ -59,9 +66,10 @@ const AdminDashboard = () => {
       })
       .catch((err) => console.error(err));
   };
+  
 
   const handleEdit = (pkg) => {
-    setEditId(pkg.id);
+    setEditId(pkg._id);
     setFormData({
       title: pkg.title,
       description: pkg.description,
