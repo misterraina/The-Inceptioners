@@ -71,7 +71,9 @@ export const loginAdmin = async (req, res) => {
 
 // Verify Token
 export const verifyToken = async (req, res) => {
+  console.log("Authorization header:", req.headers.authorization);
   const token = req.headers.authorization?.split(' ')[1];
+  // console.log("Received token:", token);
 
   if (!token) {
     return res.status(401).json({ message: 'No token provided.' });
@@ -81,6 +83,7 @@ export const verifyToken = async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     res.status(200).json({ message: 'Token is valid.', userId: decoded.id });
   } catch (error) {
+    console.error("Token verification error:", error.message); 
     res.status(401).json({ message: 'Invalid or expired token.', error: error.message });
   }
 };

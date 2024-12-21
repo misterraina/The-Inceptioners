@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import Cookies from "js-cookie";
 
@@ -6,53 +5,69 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [loading, setLoading] = useState(true); // Add a loading state
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const validateToken = async () => {
+            const token = Cookies.get("auth_token");
+            if (!token) {
+                console.warn("No token found in cookies");
+                setIsAuthenticated(false);
+                setLoading(false)
+                return;
+            }
+        
             try {
-                const response = await fetch("", {
+                const response = await fetch("http://localhost:3000/api/admins/verify-token", {
                     method: "GET",
-                    credentials: "include", // Include cookies in requests
+                    headers: { "Authorization": `Bearer ${token}` },
+                    credentials: "include",
                 });
-
+        
                 if (response.ok) {
-                    setIsAuthenticated(true); // Token is valid
+                    setIsAuthenticated(true);
+
                 } else {
-                    setIsAuthenticated(false); // Token is invalid or expired
+                    console.warn("Token validation failed");
+                    setIsAuthenticated(false);
                 }
             } catch (error) {
-                console.error("Error validating token:", error);
+                console.error("Error during token validation:", error);
                 setIsAuthenticated(false);
-            } finally {
-                setLoading(false); // Remove loading state
+            } finally{
+                setLoading(false)
             }
         };
+        
+        
 
         validateToken();
     }, []);
 
-    const login = () => setIsAuthenticated(true);
+    const login = (token) => {
+        Cookies.set("auth_token", token, { expires: 7 }); // Store token in cookies
+        setIsAuthenticated(true);
+    };
+
     const logout = async () => {
         try {
-            const response = await fetch('', {
-                method: 'POST',
-                credentials: 'include', // Include cookies in the request
+            const response = await fetch("http://localhost:3000/api/admins/logout", {
+                method: "POST",
+                credentials: "include", // Include cookies
             });
-    
+
             if (response.ok) {
+                Cookies.remove("auth_token");
                 setIsAuthenticated(false);
             } else {
-                console.error('Logout failed:', response.statusText);
+                console.error("Logout failed:", response.statusText);
             }
         } catch (error) {
-            console.error('Error during logout:', error);
+            console.error("Error during logout:", error);
         }
     };
-    
 
     if (loading) {
-        // Render a loading spinner or placeholder while verifying token
         return <div>Loading...</div>;
     }
 
@@ -62,6 +77,5 @@ export const AuthProvider = ({ children }) => {
         </AuthContext.Provider>
     );
 };
-
 
 export const useAuth = () => useContext(AuthContext);

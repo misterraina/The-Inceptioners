@@ -4,10 +4,19 @@ import userRoutes from './routes/userRoutes.js'
 import tourPackageRoutes from './routes/tourPackageRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
 import bookingRoutes from './routes/bookingRoutes.js'
+import cors from 'cors'
+import cookieParser from 'cookie-parser'
 
 const app = express();
-
+app.use(cookieParser());
 // Middleware
+const corsOptions = {
+    origin: ['http://localhost:5173'],
+    credentials: true, // Allow credentials (cookies)
+    allowedHeaders: ['Authorization', 'Content-Type'],
+};
+
+app.use(cors(corsOptions))
 app.use(express.json());
 
 // Routes

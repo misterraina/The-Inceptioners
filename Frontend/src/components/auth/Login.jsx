@@ -3,7 +3,7 @@ import { useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "../../AuthContext";
 
 const Login = () => {
-    const [username, setUsername] = useState("");
+    const [email, setemail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const { login, isAuthenticated } = useAuth();
@@ -11,8 +11,31 @@ const Login = () => {
 
     const handleLogin = async (e) => {
         e.preventDefault();
-
+        setError("");
+    
+        try {
+            const response = await fetch("http://localhost:3000/api/admins/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ email, password }),
+            });
+    
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "Login failed");
+            }
+    
+            const data = await response.json();
+            login(data.token); // Save token to cookies and update auth state
+            navigate("/admin");
+        } catch (err) {
+            setError(err.message);
+        }
     };
+    
+    
 
     if (isAuthenticated) {
         return <Navigate to="/admin" replace />;
@@ -27,14 +50,14 @@ const Login = () => {
                 <h2 className="text-2xl font-bold mb-4 text-center">Admin Login</h2>
                 {error && <p className="text-red-500 mb-3">{error}</p>}
                 <div className="mb-4">
-                    <label className="block text-sm font-medium mb-2" htmlFor="username">
-                        Username
+                    <label className="block text-sm font-medium mb-2" htmlFor="email">
+                        email
                     </label>
                     <input
-                        id="username"
+                        id="email"
                         type="text"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
+                        value={email}
+                        onChange={(e) => setemail(e.target.value)}
                         className="border rounded px-3 py-2 w-full"
                         required
                     />
